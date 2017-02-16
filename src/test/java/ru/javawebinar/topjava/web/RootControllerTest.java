@@ -1,41 +1,53 @@
 package ru.javawebinar.topjava.web;
-
 import org.junit.Test;
-
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static ru.javawebinar.topjava.MealTestData.MEAL1;
 import static ru.javawebinar.topjava.MealTestData.MEAL1_ID;
+import static ru.javawebinar.topjava.TestUtil.userAuth;
+import static ru.javawebinar.topjava.UserTestData.ADMIN;
 import static ru.javawebinar.topjava.UserTestData.USER;
 import static ru.javawebinar.topjava.model.BaseEntity.START_SEQ;
-
 
 /**
  * GKislin
  * 10.04.2015.
  */
+
 public class RootControllerTest extends AbstractControllerTest {
 
     @Test
     public void testUsers() throws Exception {
         mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/users")
+                .with(userAuth(ADMIN)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(view().name("users"))
-                .andExpect(forwardedUrl("/WEB-INF/jsp/users.jsp"));
-               /* .andExpect(model().attribute("users", hasSize(2)))
+                .andExpect(forwardedUrl("/WEB-INF/jsp/users.jsp"))
+                .andExpect(model().attribute("users", hasSize(2)))
                 .andExpect(model().attribute("users", hasItem(
                         allOf(
                                 hasProperty("id", is(START_SEQ)),
                                 hasProperty("name", is(USER.getName()))
                         )
-                )));*/
+                )));
+    }
+
+    @Test
+    public void testUnAuth() throws Exception {
+        mockMvc.perform(get("/users"))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/login"));
     }
 
     @Test
     public void testMeals() throws Exception {
-        mockMvc.perform(get("/meals"))
+        mockMvc.perform(get("/meals")
+                .with(userAuth(USER)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(view().name("meals"))
